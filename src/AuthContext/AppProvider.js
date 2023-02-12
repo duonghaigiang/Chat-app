@@ -22,7 +22,7 @@ function AppProvider({ children }) {
   const rooms = useFireStore("rooms", condition);
   console.log({ rooms });
   const selectedRoom = useMemo(
-    () => rooms.find((room) => room.id === selectedRoomId),
+    () => rooms.find((room) => room.id === selectedRoomId) || {},
 
     [rooms, selectedRoomId]
   );
@@ -30,12 +30,18 @@ function AppProvider({ children }) {
     return {
       fieldName: "uid",
       operator: "in",
-      compareValue: selectedRoom ? selectedRoom.members : "",
+      compareValue: selectedRoom.members,
     };
-  }, [selectedRoom ? selectedRoom.members : ""]);
+  }, [selectedRoom.members]);
   const members = useFireStore("users", usercondition);
   console.log("members", { members });
+  const clearState = () => {
+    setSelectedRoomId("");
+    setAddRoomvisible(false);
+    setInviteModal(false);
+  };
   console.log("abc", { selectedRoom });
+
   return (
     <AppContext.Provider
       value={{
@@ -48,6 +54,7 @@ function AppProvider({ children }) {
         members,
         inviteModal,
         setInviteModal,
+        clearState,
       }}
     >
       {children}

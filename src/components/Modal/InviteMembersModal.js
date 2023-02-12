@@ -1,99 +1,133 @@
-import debounce from "lodash";
-import { Avatar, Form, Input, Modal, Select, Spin } from "antd";
-import { collection, query, serverTimestamp, where } from "firebase/firestore";
-import React, { useContext, useMemo, useState } from "react";
-import { AppContext } from "../../AuthContext/AppProvider";
-import { AuthContext } from "../../AuthContext/AuthProvider";
-import { addDocoment } from "../../FireBase/service";
-import { async } from "@firebase/util";
-import { db } from "../../FireBase/config";
+import React, { useContext, useState } from "react";
+import { Form, Modal, Select, Spin, Avatar } from "antd";
 
-InviteMemberModal.propTypes = {};
-function DebounceSelect({ fetchOption, debounceTimeout = 300, ...props }) {
+import { debounce, get, orderBy } from "lodash";
+import { db } from "../../FireBase/config";
+import { AppContext } from "../../AuthContext/AppProvider";
+import { collection, doc, limit, query, where } from "firebase/firestore";
+
+function DebounceSelect({
+  fetchOptions,
+  debounceTimeout = 300,
+  curMembers,
+  ...props
+}) {
+  // Search: abcddassdfasdf
+
   const [fetching, setFetching] = useState(false);
   const [options, setOptions] = useState([]);
-  const debounceFetcher = useMemo(() => {
-    const loadingOption = (value) => {
+
+  const debounceFetcher = React.useMemo(() => {
+    const loadOptions = (value) => {
       setOptions([]);
       setFetching(true);
-      fetchOption(value).then((newOption) => {
-        setOptions(newOption);
+
+      fetchOptions(value, curMembers).then((newOptions) => {
+        setOptions(newOptions);
         setFetching(false);
       });
     };
-    return debounce(loadingOption, debounceTimeout);
-  }, [debounceTimeout, fetchOption]);
+
+    return debounce(loadOptions, debounceTimeout);
+  }, [debounceTimeout, fetchOptions, curMembers]);
+
+  React.useEffect(() => {
+    return () => {
+      // clear when unmount
+      setOptions([]);
+    };
+  }, []);
+
   return (
     <Select
-      labelInvalue
+      labelInValue
+      filterOption={false}
       onSearch={debounceFetcher}
       notFoundContent={fetching ? <Spin size="small" /> : null}
       {...props}
     >
       {options.map((opt) => (
-        <Select.Option>
+        <Select.Option key={opt.value} value={opt.value} title={opt.label}>
           <Avatar size="small" src={opt.photoURL}>
-            {opt.photoURL ? "" : opt.label.charAt(0).toUpperCase()}
+            {opt.photoURL ? "" : opt.label?.charAt(0)?.toUpperCase()}
           </Avatar>
-          {`${opt.label}`}
+          {` ${opt.label}`}
         </Select.Option>
       ))}
     </Select>
   );
 }
-const fetchUserList = async (search) => {
+
+async function fetchUserList(search, curMembers) {
   return query(
     collection(db, "users"),
-    where("keyWord", "array-contains", search)
-      .orderBy("displayName")
-      .litmit(5)
-      .get()
-      .then((snapshot) => {
-        return snapshot.docs.map((doc) => ({
+    where("keyWord", "array-contains", search?.toLowerCase()),
+    orderBy("displayName"),
+    limit(5),
+    get().then((snapshot) => {
+      return snapshot.docs
+        .map((doc) => ({
           label: doc.data().displayName,
           value: doc.data().uid,
           photoURL: doc.data().photoURL,
-        }));
-      })
+        }))
+        .filter((opt) => !curMembers.includes(opt.value));
+    })
   );
-};
-function InviteMemberModal(props) {
-  const [inviteModal, setInviteModal] = useState(false);
+}
+
+export default function InviteMemberModal() {
+  const { inviteModal, setInviteModal, selectedRoomId, selectedRoom } =
+    useContext(AppContext);
   const [value, setValue] = useState([]);
-
-  //   const [addRoomvisible, setAddRoomvisible] = useState(false);
   const [form] = Form.useForm();
-  const {
-    user: { uid },
-  } = useContext(AuthContext);
-  const handelSubmit = () => {
-    setInviteModal(false);
 
+  const handleOk = () => {
+    // reset form value
     form.resetFields();
+    setValue([]);
+
+    // update members in current room
+    const roomRef = doc(collection(db, "rooms"), selectedRoomId);
+
+    roomRef.update({
+      members: [...selectedRoom.members, ...value.map((val) => val.value)],
+    });
+
+    setInviteModal(false);
   };
 
-  const handelCancel = () => {
-    setInviteModal(false);
+  const handleCancel = () => {
+    // reset form value
     form.resetFields();
+    setValue([]);
+
+    setInviteModal(false);
   };
 
   return (
     <div>
-      <Modal title="mời thành viên" onOk={handelSubmit} onCancel={handelCancel}>
-        <Form form={form}>
+      <Modal
+        title="Mời thêm thành viên"
+        open={inviteModal}
+        onOk={handleOk}
+        onCancel={handleCancel}
+        destroyOnClose={true}
+      >
+        <Form form={form} layout="vertical">
           <DebounceSelect
             mode="multiple"
-            label="ten các thành viên"
+            name="search-user"
+            label="Tên các thành viên"
             value={value}
-            placeholder="nhap tên thành viên"
-            fetchOption={fetchUserList}
+            placeholder="Nhập tên thành viên"
+            fetchOptions={fetchUserList}
             onChange={(newValue) => setValue(newValue)}
             style={{ width: "100%" }}
-          ></DebounceSelect>
+            curMembers={selectedRoom.members}
+          />
         </Form>
       </Modal>
     </div>
   );
 }
-
-export default InviteMemberModal;

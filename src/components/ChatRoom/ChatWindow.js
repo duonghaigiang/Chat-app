@@ -1,8 +1,11 @@
 import { UserAddOutlined } from "@ant-design/icons";
 import { Alert, Avatar, Button, Form, Input, Space, Tooltip } from "antd";
-import React, { useContext } from "react";
+import React, { useContext, useMemo, useState } from "react";
 import styled from "styled-components";
 import { AppContext } from "../../AuthContext/AppProvider";
+import { AuthContext } from "../../AuthContext/AuthProvider";
+import { addDocoment } from "../../FireBase/service";
+import { useFireStore } from "../../Hook/firestore";
 import Message from "./Message";
 ChatWindow.propTypes = {};
 const HeaderStyle = styled.div`
@@ -57,17 +60,43 @@ const FromStyled = styled(Form)`
 `;
 function ChatWindow(props) {
   const { selectedRoom, members, setInviteModal } = useContext(AppContext);
+  const {
+    user: { uid, photoURL, displayName },
+  } = useContext(AuthContext);
+  const [inputValue, setInputValue] = useState("");
+  function handelInputChange(e) {
+    setInputValue(e.target.value);
+  }
+  const [form] = Form.useForm();
+  function handelOnSubmit() {
+    addDocoment("messages", {
+      text: inputValue,
+      uid: uid,
+      photoURL: photoURL,
+      roomId: selectedRoom.id,
+      displayName: displayName,
+    });
+    form.resetFields();
+  }
+  const condition = useMemo(
+    () => ({
+      fieldName: "roomId",
+      operator: "==",
+      compareValue: selectedRoom.id,
+    }),
+    [selectedRoom.id]
+  );
+  const message = useFireStore("messages", condition);
+  console.log("message", message);
   return (
     <WrapperStyleder>
-      {selectedRoom !== undefined ? (
+      {selectedRoom.members !== undefined ? (
         <>
           <HeaderStyle>
             <div className="header">
-              <p className="header__title">
-                {selectedRoom ? selectedRoom.name : ""}
-              </p>
+              <p className="header__title">{selectedRoom.name}</p>
               <span className="header__depscription">
-                {selectedRoom ? selectedRoom.description : ""}
+                {selectedRoom.description}
               </span>
             </div>
             <ButtonGroupStyle>
@@ -92,34 +121,29 @@ function ChatWindow(props) {
           </HeaderStyle>
           <ContentStyleder>
             <MessageListStyled>
-              <Message
-                text="abc"
-                displayName="Giang"
-                createAt="today"
-                photoUrl="A"
-              ></Message>
-              <Message
-                text="abc"
-                displayName="Duong"
-                createAt="today"
-                photoUrl="B"
-              ></Message>
-              <Message
-                text="abcsc"
-                displayName="Giang"
-                createAt="today"
-                photoUrl="C"
-              ></Message>
+              {message.map((mes) => (
+                <Message
+                  key={mes.id}
+                  text={mes.text}
+                  photoURL={mes.photoURL}
+                  displayName={mes.displayName}
+                  createdAt={mes.createdAt}
+                ></Message>
+              ))}
             </MessageListStyled>
-            <FromStyled>
-              <Form.Item>
+            <FromStyled form={form}>
+              <Form.Item name="message">
                 <Input
+                  onChange={handelInputChange}
+                  onPressEnter={handelOnSubmit}
                   bordered={false}
                   autoComplete="off"
                   placeholder="tin nhan"
                 ></Input>
               </Form.Item>
-              <Button>Gui</Button>
+              <Button onClick={handelOnSubmit} type="primary">
+                Gui
+              </Button>
             </FromStyled>
           </ContentStyleder>
         </>
@@ -131,11 +155,11 @@ function ChatWindow(props) {
           }}
         >
           <Alert
-            message="Warning"
+            message="Warning : Vui lòng chọn phòng "
             type="warning"
             showIcon
             closable
-            style={{ margin: 5 }}
+            style={{ margin: 10 }}
           />
         </Space>
       )}

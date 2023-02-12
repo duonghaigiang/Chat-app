@@ -10,6 +10,7 @@
     "ant-design": "^1.0.0",
     "antd": "^5.1.7",
     "cra-template": "1.2.0",
+    "date-fns": "^2.29.3",
     "firebase": "^9.16.0",
     "lodash": "^4.17.21",
     "query-string": "^8.1.0",

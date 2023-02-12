@@ -1,14 +1,16 @@
+import { async } from "@firebase/util";
 import {
   addDoc,
   collection,
+  doc,
   serverTimestamp,
   setDoc,
 } from "firebase/firestore";
 import { db } from "./config";
 
-export const addDocoment = (user, data) => {
+export const addDocoment = async (user, data) => {
   const query = collection(db, user);
-  addDoc(query, { ...data, createdAt: serverTimestamp() });
+  await addDoc(query, { ...data, createdAt: serverTimestamp() });
 };
 export const generateKeywords = (displayName) => {
   // liet ke tat cac hoan vi. vd: name = ["David", "Van", "Teo"]
