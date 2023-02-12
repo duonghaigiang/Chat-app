@@ -1,10 +1,9 @@
-import React, { useContext, useMemo, useState } from "react";
-import PropTypes from "prop-types";
-import styled from "styled-components";
-import { Avatar, Button, Form, Input, Tooltip } from "antd";
 import { UserAddOutlined } from "@ant-design/icons";
-import Message from "./Message";
+import { Alert, Avatar, Button, Form, Input, Space, Tooltip } from "antd";
+import React, { useContext } from "react";
+import styled from "styled-components";
 import { AppContext } from "../../AuthContext/AppProvider";
+import Message from "./Message";
 ChatWindow.propTypes = {};
 const HeaderStyle = styled.div`
   display: flex;
@@ -57,75 +56,89 @@ const FromStyled = styled(Form)`
   }
 `;
 function ChatWindow(props) {
-  const { rooms, selectedRoomId } = useContext(AppContext);
-
-  const selectedRoom = useMemo(
-    () => rooms.find((room) => room.id === selectedRoomId),
-
-    [rooms, selectedRoomId]
-  );
-  console.log("abc", { selectedRoom });
+  const { selectedRoom, members, setInviteModal } = useContext(AppContext);
   return (
     <WrapperStyleder>
-      <HeaderStyle>
-        <div className="header">
-          <p className="header__title">
-            {selectedRoom ? selectedRoom.name : "room"}
-          </p>
-          <span className="header__depscription">
-            {selectedRoom ? selectedRoom.description : "description"}
-          </span>
-        </div>
-        <ButtonGroupStyle>
-          <Button icon={<UserAddOutlined></UserAddOutlined>}>Moi</Button>
-          <Avatar.Group size="small" maxCount={2}>
-            <Tooltip title="A">
-              <Avatar>A</Avatar>
-            </Tooltip>
-            <Tooltip title="B">
-              <Avatar>B</Avatar>
-            </Tooltip>
-            <Tooltip title="C">
-              <Avatar>C</Avatar>
-            </Tooltip>
-            <Tooltip title="D">
-              <Avatar>D</Avatar>
-            </Tooltip>
-          </Avatar.Group>
-        </ButtonGroupStyle>
-      </HeaderStyle>
-      <ContentStyleder>
-        <MessageListStyled>
-          <Message
-            text="abc"
-            displayName="Giang"
-            createAt="today"
-            photoUrl="A"
-          ></Message>
-          <Message
-            text="abc"
-            displayName="Duong"
-            createAt="today"
-            photoUrl="B"
-          ></Message>
-          <Message
-            text="abcsc"
-            displayName="Giang"
-            createAt="today"
-            photoUrl="C"
-          ></Message>
-        </MessageListStyled>
-        <FromStyled>
-          <Form.Item>
-            <Input
-              bordered={false}
-              autoComplete="off"
-              placeholder="tin nhan"
-            ></Input>
-          </Form.Item>
-          <Button>Gui</Button>
-        </FromStyled>
-      </ContentStyleder>
+      {selectedRoom !== undefined ? (
+        <>
+          <HeaderStyle>
+            <div className="header">
+              <p className="header__title">
+                {selectedRoom ? selectedRoom.name : ""}
+              </p>
+              <span className="header__depscription">
+                {selectedRoom ? selectedRoom.description : ""}
+              </span>
+            </div>
+            <ButtonGroupStyle>
+              <Button
+                icon={<UserAddOutlined></UserAddOutlined>}
+                onClick={() => setInviteModal(true)}
+              >
+                Moi
+              </Button>
+              <Avatar.Group size="small" maxCount={2}>
+                {members.map((member) => (
+                  <Tooltip title={member.displayName}>
+                    <Avatar src={member.photoUrl}>
+                      {member.photoUrl
+                        ? " "
+                        : member.displayName?.charAt(0)?.toUpperCase()}
+                    </Avatar>
+                  </Tooltip>
+                ))}
+              </Avatar.Group>
+            </ButtonGroupStyle>
+          </HeaderStyle>
+          <ContentStyleder>
+            <MessageListStyled>
+              <Message
+                text="abc"
+                displayName="Giang"
+                createAt="today"
+                photoUrl="A"
+              ></Message>
+              <Message
+                text="abc"
+                displayName="Duong"
+                createAt="today"
+                photoUrl="B"
+              ></Message>
+              <Message
+                text="abcsc"
+                displayName="Giang"
+                createAt="today"
+                photoUrl="C"
+              ></Message>
+            </MessageListStyled>
+            <FromStyled>
+              <Form.Item>
+                <Input
+                  bordered={false}
+                  autoComplete="off"
+                  placeholder="tin nhan"
+                ></Input>
+              </Form.Item>
+              <Button>Gui</Button>
+            </FromStyled>
+          </ContentStyleder>
+        </>
+      ) : (
+        <Space
+          direction="vertical"
+          style={{
+            width: "100%",
+          }}
+        >
+          <Alert
+            message="Warning"
+            type="warning"
+            showIcon
+            closable
+            style={{ margin: 5 }}
+          />
+        </Space>
+      )}
     </WrapperStyleder>
   );
 }

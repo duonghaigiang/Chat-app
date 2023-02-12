@@ -3,7 +3,7 @@ import { FacebookAuthProvider, signInWithPopup } from "firebase/auth";
 import { addDoc, collection, doc, setDoc } from "firebase/firestore";
 import React from "react";
 import { auth, db } from "../../FireBase/config";
-import { addDocoment } from "../../FireBase/service";
+import { addDocoment, generateKeywords } from "../../FireBase/service";
 const { Title } = Typography;
 Login.propTypes = {};
 const FbProvider = new FacebookAuthProvider();
@@ -17,6 +17,7 @@ function Login(props) {
         photoUrl: respond.user.photoURL,
         uid: respond.user.uid,
         provderId: respond.providerId,
+        keyWord: generateKeywords(respond.user.displayName),
       });
     });
     // }
