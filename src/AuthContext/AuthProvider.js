@@ -28,7 +28,7 @@ function AuthProvider({ children }) {
     return () => {
       unsubcibed();
     };
-  }, [historyPush]);
+  }, []);
   return (
     <AuthContext.Provider value={{ user }}>
       {isLoading ? <Spin /> : children}

@@ -7,6 +7,7 @@ import AuthProvider from "./AuthContext/AuthProvider";
 import AppProvider from "./AuthContext/AppProvider";
 import AddRoomModal from "./components/Modal/AddRoomModal";
 import InviteMemberModal from "./components/Modal/InviteMembersModal";
+import Redux from "./components/Redux/Redux";
 function App() {
   return (
     <BrowserRouter>
@@ -15,6 +16,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login></Login>}></Route>
             <Route path="/chatroom" element={<ChatRoom></ChatRoom>}></Route>
+            <Route path="/redux" element={<Redux></Redux>}></Route>
           </Routes>
           <AddRoomModal></AddRoomModal>
           <InviteMemberModal></InviteMemberModal>

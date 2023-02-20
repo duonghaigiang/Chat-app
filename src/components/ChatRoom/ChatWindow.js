@@ -74,6 +74,7 @@ function ChatWindow(props) {
       uid: uid,
       photoURL: photoURL,
       roomId: selectedRoom.id,
+
       displayName: displayName,
     });
     form.resetFields();
